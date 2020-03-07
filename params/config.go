@@ -17,6 +17,7 @@
 package params
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
 	"math/big"
@@ -24,6 +25,43 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
+
+// ETD const variable
+var (
+	// SupplyAddress reserve address store current supply
+	SupplyAddress = common.BytesToAddress([]byte("supply"))
+
+	// InitSupply init supply
+	InitSupply = new(big.Int).Mul(big.NewInt(10000000053073), big.NewInt(1e13))
+
+	// MaxSupply max supply
+	MaxSupply = new(big.Int).Mul(big.NewInt(100002500), big.NewInt(1e18))
+
+	// InitDifficulty init difficulty
+	InitDifficulty = big.NewInt(131072)
+
+	// HalfDistance half distance
+	HalfDistance = big.NewInt(200)
+
+	// HalfHalfDistance half half distance
+	HalfHalfDistance = new(big.Int).Div(HalfDistance, big.NewInt(2))
+
+	// PreHalfReward before first half reward
+	PreHalfReward = new(big.Int).Mul(big.NewInt(10), big.NewInt(1e18))
+
+	// HalfReward first half reward
+	HalfReward = new(big.Int).Mul(big.NewInt(5), big.NewInt(1e18))
+)
+
+// IsReserveAddr ...
+var IsReserveAddr = func(addresses ...common.Address) bool {
+	for _, address := range addresses {
+		if bytes.Compare(address.Bytes(), SupplyAddress.Bytes()) == 0 {
+			return true
+		}
+	}
+	return false
+}
 
 // Genesis hashes to enforce below configs on.
 var (
@@ -54,20 +92,21 @@ var CheckpointOracles = map[common.Hash]*CheckpointOracleConfig{
 var (
 	// MainnetChainConfig is the chain parameters to run a node on the main network.
 	MainnetChainConfig = &ChainConfig{
-		ChainID:             big.NewInt(1),
-		HomesteadBlock:      big.NewInt(1150000),
-		DAOForkBlock:        big.NewInt(1920000),
-		DAOForkSupport:      true,
-		EIP150Block:         big.NewInt(2463000),
-		EIP150Hash:          common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0"),
-		EIP155Block:         big.NewInt(2675000),
-		EIP158Block:         big.NewInt(2675000),
-		ByzantiumBlock:      big.NewInt(4370000),
-		ConstantinopleBlock: big.NewInt(7280000),
-		PetersburgBlock:     big.NewInt(7280000),
-		IstanbulBlock:       big.NewInt(9069000),
-		MuirGlacierBlock:    big.NewInt(9200000),
-		Ethash:              new(EthashConfig),
+		ChainID:        big.NewInt(1),
+		HomesteadBlock: big.NewInt(1150000),
+		DAOForkBlock:   big.NewInt(1920000),
+		DAOForkSupport: true,
+		EIP150Block:    big.NewInt(2463000),
+		EIP150Hash:     common.HexToHash("0x2086799aeebeae135c246c65021c82b4e15a2c451340993aacfd2751886514f0"),
+		EIP155Block:    big.NewInt(2675000),
+		EIP158Block:    big.NewInt(2675000),
+		ByzantiumBlock: big.NewInt(4370000),
+		ETDBlock:       big.NewInt(5764833),
+		// ConstantinopleBlock: big.NewInt(7280000),
+		// PetersburgBlock:     big.NewInt(7280000),
+		// IstanbulBlock:       big.NewInt(9069000),
+		// MuirGlacierBlock:    big.NewInt(9200000),
+		Ethash: new(EthashConfig),
 	}
 
 	// MainnetTrustedCheckpoint contains the light client trusted checkpoint for the main network.
@@ -215,16 +254,16 @@ var (
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
+	AllEthashProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 
 	// AllCliqueProtocolChanges contains every protocol change (EIPs) introduced
 	// and accepted by the Ethereum core developers into the Clique consensus.
 	//
 	// This configuration is intentionally not using keyed fields to force anyone
 	// adding flags to the config to also have to set these fields.
-	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
+	AllCliqueProtocolChanges = &ChainConfig{big.NewInt(1337), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, nil, &CliqueConfig{Period: 0, Epoch: 30000}}
 
-	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
+	TestChainConfig = &ChainConfig{big.NewInt(1), big.NewInt(0), nil, false, big.NewInt(0), common.Hash{}, big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), big.NewInt(0), nil, nil, new(EthashConfig), nil}
 	TestRules       = TestChainConfig.Rules(new(big.Int))
 )
 
@@ -291,6 +330,7 @@ type ChainConfig struct {
 	EIP158Block *big.Int `json:"eip158Block,omitempty"` // EIP158 HF block
 
 	ByzantiumBlock      *big.Int `json:"byzantiumBlock,omitempty"`      // Byzantium switch block (nil = no fork, 0 = already on byzantium)
+	ETDBlock            *big.Int `json:"etdBlock,omitempty"`            // ETD switch block (nil = no fork, 0 = already on byzantium)
 	ConstantinopleBlock *big.Int `json:"constantinopleBlock,omitempty"` // Constantinople switch block (nil = no fork, 0 = already activated)
 	PetersburgBlock     *big.Int `json:"petersburgBlock,omitempty"`     // Petersburg switch block (nil = same as Constantinople)
 	IstanbulBlock       *big.Int `json:"istanbulBlock,omitempty"`       // Istanbul switch block (nil = no fork, 0 = already on istanbul)
@@ -332,7 +372,7 @@ func (c *ChainConfig) String() string {
 	default:
 		engine = "unknown"
 	}
-	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v Constantinople: %v Petersburg: %v Istanbul: %v, Muir Glacier: %v, Engine: %v}",
+	return fmt.Sprintf("{ChainID: %v Homestead: %v DAO: %v DAOSupport: %v EIP150: %v EIP155: %v EIP158: %v Byzantium: %v ETD: %v Constantinople: %v Petersburg: %v Istanbul: %v, Muir Glacier: %v, Engine: %v}",
 		c.ChainID,
 		c.HomesteadBlock,
 		c.DAOForkBlock,
@@ -341,6 +381,7 @@ func (c *ChainConfig) String() string {
 		c.EIP155Block,
 		c.EIP158Block,
 		c.ByzantiumBlock,
+		c.ETDBlock,
 		c.ConstantinopleBlock,
 		c.PetersburgBlock,
 		c.IstanbulBlock,
@@ -377,6 +418,11 @@ func (c *ChainConfig) IsEIP158(num *big.Int) bool {
 // IsByzantium returns whether num is either equal to the Byzantium fork block or greater.
 func (c *ChainConfig) IsByzantium(num *big.Int) bool {
 	return isForked(c.ByzantiumBlock, num)
+}
+
+// IsETD returns whether num is either equal to the etd fork block or greater.
+func (c *ChainConfig) IsETD(num *big.Int) bool {
+	return isForked(c.ETDBlock, num)
 }
 
 // IsConstantinople returns whether num is either equal to the Constantinople fork block or greater.
@@ -438,6 +484,7 @@ func (c *ChainConfig) CheckConfigForkOrder() error {
 		{"eip155Block", c.EIP155Block},
 		{"eip158Block", c.EIP158Block},
 		{"byzantiumBlock", c.ByzantiumBlock},
+		{"etdBlock", c.ETDBlock},
 		{"constantinopleBlock", c.ConstantinopleBlock},
 		{"petersburgBlock", c.PetersburgBlock},
 		{"istanbulBlock", c.IstanbulBlock},
@@ -485,6 +532,9 @@ func (c *ChainConfig) checkCompatible(newcfg *ChainConfig, head *big.Int) *Confi
 	}
 	if isForkIncompatible(c.ByzantiumBlock, newcfg.ByzantiumBlock, head) {
 		return newCompatError("Byzantium fork block", c.ByzantiumBlock, newcfg.ByzantiumBlock)
+	}
+	if isForkIncompatible(c.ETDBlock, newcfg.ETDBlock, head) {
+		return newCompatError("ETD fork block", c.ETDBlock, newcfg.ETDBlock)
 	}
 	if isForkIncompatible(c.ConstantinopleBlock, newcfg.ConstantinopleBlock, head) {
 		return newCompatError("Constantinople fork block", c.ConstantinopleBlock, newcfg.ConstantinopleBlock)
