@@ -320,6 +320,11 @@ func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Heade
 		return calcDifficultyEip2384(time, parent)
 	case config.IsConstantinople(next):
 		return calcDifficultyConstantinople(time, parent)
+	case config.IsETD(next):
+		if next.Cmp(config.ETDBlock) == 0 {
+			parent.Difficulty = params.InitDifficulty
+		}
+		return calcDifficultyETD(time, parent)
 	case config.IsByzantium(next):
 		return calcDifficultyByzantium(time, parent)
 	case config.IsHomestead(next):
@@ -400,6 +405,45 @@ func makeDifficultyCalculator(bombDelay *big.Int) func(time uint64, parent *type
 		}
 		return x
 	}
+}
+
+// calcDifficultyETD is the difficulty adjustment algorithm. It returns
+// the difficulty that a new block should have when created at time given the
+// parent block's time and difficulty. The calculation uses the etd rules.
+func calcDifficultyETD(time uint64, parent *types.Header) *big.Int {
+	// https://github.com/ethereum/EIPs/blob/master/EIPS/eip-2.md
+	// algorithm:
+	// diff = (parent_diff +
+	//         (parent_diff / 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99))
+	//        )
+
+	bigTime := new(big.Int).SetUint64(time)
+	bigParentTime := new(big.Int).SetUint64(parent.Time)
+
+	// holds intermediate values to make the algo easier to read & audit
+	x := new(big.Int)
+	y := new(big.Int)
+
+	// 1 - (block_timestamp - parent_timestamp) // 10
+	x.Sub(bigTime, bigParentTime)
+	x.Div(x, big10)
+	x.Sub(big1, x)
+
+	// max(1 - (block_timestamp - parent_timestamp) // 10, -99)
+	if x.Cmp(bigMinus99) < 0 {
+		x.Set(bigMinus99)
+	}
+	// (parent_diff + parent_diff // 2048 * max(1 - (block_timestamp - parent_timestamp) // 10, -99))
+	y.Div(parent.Difficulty, params.DifficultyBoundDivisor)
+	x.Mul(y, x)
+	x.Add(parent.Difficulty, x)
+
+	// minimum difficulty can ever be (before exponential factor)
+	if x.Cmp(params.MinimumDifficulty) < 0 {
+		x.Set(params.MinimumDifficulty)
+	}
+
+	return x
 }
 
 // calcDifficultyHomestead is the difficulty adjustment algorithm. It returns
@@ -624,11 +668,37 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	if config.IsByzantium(header.Number) {
 		blockReward = ByzantiumBlockReward
 	}
+
+	if config.IsETD(header.Number) {
+		if header.Number.Cmp(config.ETDBlock) == 0 {
+			state.AddBalance(params.SupplyAddress, params.InitSupply)
+		}
+
+		supply := state.GetBalance(params.SupplyAddress)
+		if supply.Cmp(params.MaxSupply) >= 0 {
+			return
+		}
+
+		distance := new(big.Int).Sub(header.Number, config.ETDBlock)
+		if ret := distance.Cmp(params.HalfHalfDistance); ret < 0 {
+			// before half reward
+			blockReward = params.PreHalfReward
+		} else {
+			// half reward
+			if distance.Cmp(params.HalfDistance) >= 0 {
+				cnt := new(big.Int).Div(distance, params.HalfDistance)
+				blockReward = new(big.Int).Div(params.HalfReward, new(big.Int).Exp(big2, cnt, nil))
+			} else {
+				blockReward = params.HalfReward
+			}
+		}
+	}
 	if config.IsConstantinople(header.Number) {
 		blockReward = ConstantinopleBlockReward
 	}
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)
+	uncleReward := big.NewInt(0)
 	r := new(big.Int)
 	for _, uncle := range uncles {
 		r.Add(uncle.Number, big8)
@@ -636,9 +706,13 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		r.Mul(r, blockReward)
 		r.Div(r, big8)
 		state.AddBalance(uncle.Coinbase, r)
+		uncleReward.Add(uncleReward, r)
 
 		r.Div(blockReward, big32)
 		reward.Add(reward, r)
 	}
 	state.AddBalance(header.Coinbase, reward)
+	if config.IsETD(header.Number) {
+		state.AddBalance(params.SupplyAddress, new(big.Int).Add(reward, uncleReward))
+	}
 }
