@@ -256,6 +256,7 @@ func (g *Genesis) configOrDefault(ghash common.Hash) *params.ChainConfig {
 // ToBlock creates the genesis block and writes state of a genesis specification
 // to the given database (or discards it if nil).
 func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
+	isG := db != nil
 	if db == nil {
 		db = rawdb.NewMemoryDatabase()
 	}
@@ -267,6 +268,12 @@ func (g *Genesis) ToBlock(db ethdb.Database) *types.Block {
 		for key, value := range account.Storage {
 			statedb.SetState(addr, key, value)
 		}
+		if isG {
+			params.TotalSupply = new(big.Int).Add(params.TotalSupply, account.Balance)
+		}
+	}
+	if isG {
+		fmt.Printf("totoalsupply: number %v totalsupply %s\n", g.Number, params.TotalSupply)
 	}
 	root := statedb.IntermediateRoot(false)
 	head := &types.Header{

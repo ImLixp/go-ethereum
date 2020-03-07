@@ -627,6 +627,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 	if config.IsConstantinople(header.Number) {
 		blockReward = ConstantinopleBlockReward
 	}
+	supply := big.NewInt(0)
 	// Accumulate the rewards for the miner and any included uncles
 	reward := new(big.Int).Set(blockReward)
 	r := new(big.Int)
@@ -635,10 +636,14 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		r.Sub(r, header.Number)
 		r.Mul(r, blockReward)
 		r.Div(r, big8)
+		supply = new(big.Int).Add(supply, r)
 		state.AddBalance(uncle.Coinbase, r)
 
 		r.Div(blockReward, big32)
 		reward.Add(reward, r)
 	}
+	supply = new(big.Int).Add(supply, reward)
+	params.TotalSupply = new(big.Int).Add(params.TotalSupply, supply)
+	fmt.Printf("totoalsupply: number %v totalsupply %v, supply %v\n", header.Number, params.TotalSupply, supply)
 	state.AddBalance(header.Coinbase, reward)
 }
