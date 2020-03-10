@@ -321,6 +321,9 @@ func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Heade
 	case config.IsConstantinople(next):
 		return calcDifficultyConstantinople(time, parent)
 	case config.IsETD(next):
+		if next.Cmp(config.ETDBlock) == 0 {
+			parent.Difficulty = params.InitDifficulty
+		}
 		return calcDifficultyFrontier(time, parent)
 	case config.IsByzantium(next):
 		return calcDifficultyByzantium(time, parent)
