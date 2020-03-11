@@ -39,6 +39,7 @@ var (
 
 	// InitDifficulty init difficulty
 	InitDifficulty = big.NewInt(17179869184)
+	// InitDifficulty = big.NewInt(131072)
 
 	// HalfDistance half distance
 	HalfDistance = big.NewInt(2102400)
