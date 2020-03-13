@@ -44,7 +44,7 @@ var (
 	HalfDistance = big.NewInt(200)
 
 	// HalfHalfDistance half half distance
-	HalfHalfDistance = new(big.Int).Mul(HalfDistance, big.NewInt(2))
+	HalfHalfDistance = new(big.Int).Div(HalfDistance, big.NewInt(2))
 
 	// PreHalfReward before first half reward
 	PreHalfReward = new(big.Int).Mul(big.NewInt(10), big.NewInt(1e18))

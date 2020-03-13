@@ -690,7 +690,8 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 			// half reward
 			if distance.Cmp(params.HalfDistance) >= 0 {
 				cnt := new(big.Int).Div(distance, params.HalfDistance)
-				blockReward = new(big.Int).Div(params.HalfReward, new(big.Int).Add(cnt, common.Big1))
+				blockReward = new(big.Int).Div(params.HalfReward, new(big.Int).Exp(big2, new(big.Int).Sub(cnt, big1), nil))
+				// blockReward = new(big.Int).Div(params.HalfReward, new(big.Int).Add(cnt, common.Big1))
 			} else {
 				blockReward = params.HalfReward
 			}
