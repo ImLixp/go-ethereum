@@ -324,7 +324,9 @@ func CalcDifficulty(config *params.ChainConfig, time uint64, parent *types.Heade
 		if next.Cmp(config.ETDBlock) == 0 {
 			parent.Difficulty = params.InitDifficulty
 		}
-		return calcDifficultyFrontier(time, parent)
+		diff := calcDifficultyFrontier(time, parent)
+		fmt.Println("etd diff", next, diff)
+		return diff
 	case config.IsByzantium(next):
 		return calcDifficultyByzantium(time, parent)
 	case config.IsHomestead(next):
@@ -636,6 +638,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 		}
 
 		supply := state.GetBalance(params.SupplyAddress)
+		fmt.Println("etd ", header.Number, supply)
 		if supply.Cmp(params.MaxSupply) >= 0 {
 			return
 		}
@@ -653,6 +656,7 @@ func accumulateRewards(config *params.ChainConfig, state *state.StateDB, header 
 				blockReward = params.HalfReward
 			}
 		}
+		fmt.Println("etd reward ", header.Number, supply, blockReward)
 	}
 	if config.IsConstantinople(header.Number) {
 		blockReward = ConstantinopleBlockReward

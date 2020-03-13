@@ -35,23 +35,22 @@ var (
 	InitSupply = new(big.Int).Mul(big.NewInt(10000000053073), big.NewInt(1e13))
 
 	// MaxSupply max supply
-	MaxSupply = new(big.Int).Mul(big.NewInt(200000000), big.NewInt(1e18))
+	MaxSupply = new(big.Int).Mul(big.NewInt(100002500), big.NewInt(1e18))
 
 	// InitDifficulty init difficulty
-	InitDifficulty = big.NewInt(17179869184)
-	// InitDifficulty = big.NewInt(131072)
+	InitDifficulty = big.NewInt(131072)
 
 	// HalfDistance half distance
-	HalfDistance = big.NewInt(2102400)
+	HalfDistance = big.NewInt(200)
 
 	// HalfHalfDistance half half distance
 	HalfHalfDistance = new(big.Int).Mul(HalfDistance, big.NewInt(2))
 
 	// PreHalfReward before first half reward
-	PreHalfReward = new(big.Int).Mul(big.NewInt(114), big.NewInt(1e18))
+	PreHalfReward = new(big.Int).Mul(big.NewInt(10), big.NewInt(1e18))
 
 	// HalfReward first half reward
-	HalfReward = new(big.Int).Mul(big.NewInt(22), big.NewInt(1e16))
+	HalfReward = new(big.Int).Mul(big.NewInt(5), big.NewInt(1e18))
 )
 
 // IsReserveAddr ...
